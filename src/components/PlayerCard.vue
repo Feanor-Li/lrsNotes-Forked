@@ -16,7 +16,7 @@
 
 <script setup>
 import RoleSelector from './roleSelector.vue'
-import {useBoard} from '@/composables/useBoard'
+import {getElectionImage, getElectionAlt, toggleElection} from '@/composables/useElection'
 
 defineProps({
   player: {type: Object, required: true},
@@ -28,7 +28,6 @@ defineProps({
 })
 
 defineEmits(['update:role', 'blur'])
-const {getElectionImage, getElectionAlt, toggleElection} = useBoard()
 </script>
 
 <style scoped lang="scss">
