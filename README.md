@@ -2,8 +2,9 @@
 
 狼人杀在线笔记是一个为狼人杀游戏玩家设计的工具，方便玩家记录发言信息并导出，提高游戏体验。
 <p align="center">
-    <a href="https://lrsnotes.pages.dev"><img src="https://img.shields.io/badge/访问-在线使用-lgreen?style=plastic" alt="在线使用"></a>
-    <a href="https://github.com/syhy0612/lrsNotes"><img src="https://img.shields.io/badge/github-项目地址-blue?style=plastic" alt="GitHub 项目地址"></a>
+    <a href="https://feanor-li.github.io/lrsNotes-Forked/"><img src="https://img.shields.io/badge/访问-在线使用-lgreen?style=plastic" alt="在线使用"></a>
+    <a href="https://github.com/Feanor-Li/lrsNotes-Forked"><img src="https://img.shields.io/badge/github-项目地址-blue?style=plastic" alt="GitHub 项目地址"></a>
+    <a href="https://github.com/syhy0612/lrsNotes"><img src="https://img.shields.io/badge/上游-syhy0612%2FlrsNotes-lightgrey?style=plastic" alt="上游仓库"></a>
     <a href="https://github.com/syhy0612/lrsNotes/stargazers"><img src="https://img.shields.io/github/stars/syhy0612/lrsNotes?style=social" alt="GitHub Star 数"></a>
 </p>
 

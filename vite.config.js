@@ -7,12 +7,13 @@ import {ElementPlusResolver} from 'unplugin-vue-components/resolvers';
 import {fileURLToPath, URL} from 'url';
 import svgLoader from 'vite-svg-loader';
 
-export default defineConfig({
+export default defineConfig(({command}) => ({
     server: {
         host: '0.0.0.0',
         port: 8080,
     },
-    base: '/',
+    // 本地开发用根路径；构建（部署到 GitHub Pages 项目页）用仓库名作为子路径
+    base: command === 'build' ? '/lrsNotes-Forked/' : '/',
     plugins: [
         vue(),
         AutoImport({
@@ -39,4 +40,4 @@ export default defineConfig({
     optimizeDeps: {
         include: ['element-plus/es'],
     },
-});
+}));
