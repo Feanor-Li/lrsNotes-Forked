@@ -37,6 +37,39 @@
       <button class="rule-close" @click="showRules = false">×</button>
     </div>
 
+    <!-- 分页标签 -->
+    <div class="page-tabs">
+      <div class="page-tabs-list">
+        <div
+            v-for="(page, idx) in pages" :key="page.id"
+            class="page-tab" :class="{ 'is-active': idx === activeIndex }"
+            @click="switchPage(idx)"
+            @dblclick="startRename(idx)"
+        >
+          <input
+              v-if="renamingIndex === idx"
+              ref="renameInput"
+              v-model="renameText"
+              class="page-tab-input"
+              @keyup.enter="commitRename"
+              @keyup.esc="cancelRename"
+              @blur="commitRename"
+              @click.stop
+          >
+          <template v-else>
+            <span class="page-tab-title">{{ page.title }}</span>
+            <button
+                v-if="pages.length > 1"
+                class="page-tab-close"
+                title="删除该页"
+                @click.stop="removePage(idx)"
+            >×</button>
+          </template>
+        </div>
+      </div>
+      <button class="page-tab-add" title="新增一页" @click="addPage">＋</button>
+    </div>
+
     <!-- 内容区 -->
     <div class="board-body">
       <!-- 自记信息 -->
@@ -93,6 +126,39 @@
           </div>
         </div>
       </div>
+
+      <!-- 投票信息 -->
+      <div class="section section--votes">
+        <div class="section-head">
+          <span class="section-label">投票信息</span>
+          <div class="section-acts">
+            <button class="act-btn" @click="resetVotes" title="重置">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.5 15.5A9 9 0 1 1 21 7.5L23 10"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="votes-table">
+          <div class="votes-row votes-row--head">
+            <div class="votes-cell">被投玩家</div>
+            <div class="votes-cell">投票玩家</div>
+            <div class="votes-cell votes-cell--act"></div>
+          </div>
+          <div class="votes-row" v-for="(row, idx) in votes" :key="row.id">
+            <div class="votes-cell">
+              <el-input v-model="row.target" type="textarea" :autosize="{ minRows: 1 }"
+                        placeholder="如 03号" @blur="handleVoteBlur(idx)"/>
+            </div>
+            <div class="votes-cell">
+              <el-input v-model="row.voters" type="textarea" :autosize="{ minRows: 1 }"
+                        placeholder="如 01,05,09" @blur="handleVoteBlur(idx)"/>
+            </div>
+            <div class="votes-cell votes-cell--act">
+              <button class="act-btn" title="删除该行" @click="removeVoteRow(idx)">×</button>
+            </div>
+          </div>
+        </div>
+        <button class="vote-add-btn" @click="addVoteRow">＋ 添加一行</button>
+      </div>
     </div>
 
     <!-- 对话框 -->
@@ -112,7 +178,7 @@
 </template>
 
 <script setup>
-import {ref, computed, onMounted, onUnmounted} from 'vue'
+import {ref, computed, nextTick, onMounted, onUnmounted} from 'vue'
 import {useBoard} from '@/composables/useBoard'
 import {useBackground} from '@/composables/useBackground'
 import PlayerCard from './PlayerCard.vue'
@@ -133,9 +199,36 @@ const handleBackgroundCommand = (cmd) => {
 const {
   selectedMode, remarks, chatRecords, showExportDialog, exportedInfo,
   showGameSettings, gameSettingsRef, options, modeDesc,
+  pages, activeIndex, switchPage, addPage, removePage, renamePage,
+  votes, handleVoteBlur, addVoteRow, removeVoteRow, resetVotes,
   handleBlur, resetRemarks, resetTalks, handUp, exportInfo,
   copyExportedInfo, handleSettingsClose, openSettings, updatePlayerRole
 } = useBoard()
+
+// 分页重命名
+const renamingIndex = ref(-1)
+const renameText = ref('')
+const renameInput = ref(null)
+
+const startRename = (idx) => {
+  renamingIndex.value = idx
+  renameText.value = pages.value[idx].title
+  nextTick(() => {
+    const el = Array.isArray(renameInput.value) ? renameInput.value[0] : renameInput.value
+    el?.focus()
+    el?.select()
+  })
+}
+
+const commitRename = () => {
+  if (renamingIndex.value === -1) return
+  renamePage(renamingIndex.value, renameText.value)
+  renamingIndex.value = -1
+}
+
+const cancelRename = () => {
+  renamingIndex.value = -1
+}
 
 // 工具函数
 const pad = (n) => String(n).padStart(2, '0')
@@ -298,6 +391,46 @@ const goHome = () => emit('go-home')
 .players-grid { display: flex; gap: 14px; }
 .players-col { flex: 1; }
 
+/* ---- 投票信息表 ---- */
+.votes-table { display: flex; flex-direction: column; gap: 6px; }
+
+.votes-row {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.votes-row--head {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  padding: 0 2px;
+}
+
+.votes-cell { flex: 1; min-width: 0; }
+
+.votes-cell--act {
+  flex: 0 0 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 26px;
+}
+
+.vote-add-btn {
+  margin-top: 8px;
+  width: 100%;
+  padding: 6px;
+  border: 1px dashed var(--border-color);
+  border-radius: var(--radius-sm);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  font-size: 12px;
+  cursor: pointer;
+  transition: var(--transition);
+  &:hover { border-color: var(--border-hover); color: var(--text-primary); }
+}
+
 /* ---- 全屏模式 ---- */
 .is-fullscreen {
   max-width: 100%;
@@ -329,6 +462,12 @@ const goHome = () => emit('go-home')
   .section--players {
     order: 1;
     flex: 2;
+  }
+
+  .section--votes {
+    order: 3;
+    flex: 1;
+    overflow-y: auto;
   }
 
   .players-grid {
@@ -372,6 +511,86 @@ const goHome = () => emit('go-home')
     flex: 1;
     resize: none !important;
   }
+}
+
+/* ---- 分页标签 ---- */
+.page-tabs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.page-tabs-list {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+
+.page-tab {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+  padding: 5px 10px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  font-size: 12px;
+  cursor: pointer;
+  user-select: none;
+  transition: var(--transition);
+
+  &:hover { border-color: var(--border-hover); color: var(--text-primary); }
+
+  &.is-active {
+    background: #5856d6;
+    border-color: #5856d6;
+    color: #fff;
+    font-weight: 600;
+  }
+}
+
+.page-tab-title { white-space: nowrap; }
+
+.page-tab-input {
+  width: 76px;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+}
+
+.page-tab-close {
+  border: none;
+  background: none;
+  color: inherit;
+  font-size: 14px;
+  line-height: 1;
+  padding: 0;
+  cursor: pointer;
+  opacity: 0.55;
+  &:hover { opacity: 1; }
+}
+
+.page-tab-add {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border: 1px dashed var(--border-color);
+  border-radius: var(--radius-sm);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+  transition: var(--transition);
+  &:hover { border-color: var(--border-hover); color: var(--text-primary); }
 }
 
 .board-body {
